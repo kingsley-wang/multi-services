@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t test -f ./client/dev.Dockerfile .
+
+script:
+  - docker run -e CI=true test npm test -- --coverage
+
+after_success:
+  - docker build -t kingsleywang/multi-client -f ./client/dev.Dockerfile .
+  - docker build -t kingsleywang/multi-server -f ./server/dev.Dockerfile .
+  - docker build -t kingsleywang/multi-nginx -f ./nginx/dev.Dockerfile .
+  - docker build -t kingsleywang/multi-worker -f ./worker/dev.Dockerfile .
+  # Log in to the docker CLI
+  - echo "$DOCKER_PWD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to Docker Hub
+  - docker push kingsleywang/multi-client
+  - docker push kingsleywang/multi-server
+  - docker push kingsleywang/multi-nginx
+  - docker push kingsleywang/multi-worker
